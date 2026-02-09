@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a1a;
+  --foreground: #ffb347;
+  --accent-cyan: #00e5ff;
+  --accent-magenta: #ff2d7b;
+  --accent-amber: #ffb347;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-mono: monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: monospace;
+}
+
+/* Retro CRT scanlines effect */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffb347;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00e5ff;
+}
+
+/* Selection */
+::selection {
+  background: #ffb347;
+  color: #0a0a1a;
+}
+
+/* Audio player styling */
+audio {
+  width: 100%;
+  background: #1a1a2e;
+}
+
+audio::-webkit-media-controls-panel {
+  background: #1a1a2e;
+}
+
+/* Button hover glow */
+button:hover:not(:disabled) {
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Neon text glow */
+.neon-text {
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor;
+}
+
+/* CRT flicker animation */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.9; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.99; }
+  25% { opacity: 0.95; }
+  30% { opacity: 0.9; }
+  35% { opacity: 0.96; }
+  40% { opacity: 0.98; }
+  45% { opacity: 0.95; }
+  50% { opacity: 1; }
+  55% { opacity: 0.97; }
+  60% { opacity: 0.95; }
+  65% { opacity: 0.99; }
+  70% { opacity: 0.97; }
+  75% { opacity: 0.96; }
+  80% { opacity: 0.98; }
+  85% { opacity: 0.97; }
+  90% { opacity: 0.95; }
+  95% { opacity: 0.99; }
+  100% { opacity: 1; }
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}
