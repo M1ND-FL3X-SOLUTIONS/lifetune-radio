@@ -1,4 +1,4 @@
-"""LifeTune Radio — Modal API wrapper"""
+"""LifeTune Station — single CPU Modal app with animated UI + working playback."""
 
 import modal
 from modal import App
@@ -12,54 +12,19 @@ image = (
 
 UPSTREAM_GPU_API = "https://m1ndb0t-2045--intergalactic-music-festival-radio-api.modal.run"
 
+
 @app.function(image=image)
 @modal.asgi_app()
 def web_ui():
     from fastapi import FastAPI, HTTPException
-    from fastapi.responses import HTMLResponse
-    import httpx
-    
+    from fastapi.responses import HTMLResponse, RedirectResponse
+    import httpx, os
+
     fast_app = FastAPI()
-    
+
     @fast_app.get("/api/health")
     def health():
-        return {"status": "ok", "service": "lifetune-radio"}
-    
-    @fast_app.get("/api/stripe/checkout")
-    async def checkout_get(plan: str = "day_pass"):
-        """GET handler so browser links work."""
-        from fastapi.responses import RedirectResponse, HTMLResponse
-        import os
-
-        # If real Stripe Payment Link is configured, redirect immediately.
-        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
-        if payment_link:
-            return RedirectResponse(url=payment_link, status_code=302)
-
-        # Fallback test screen so users don't hit a dead endpoint.
-        return HTMLResponse(
-            f"""
-            <html><body style='font-family:monospace;background:#0a0a1a;color:#ffb347;padding:24px'>
-            <h2 style='color:#00e5ff'>Checkout not configured yet</h2>
-            <p>Plan: <b>{plan}</b></p>
-            <p>Set <code>STRIPE_PAYMENT_LINK_URL</code> in Modal env to enable one-click purchase.</p>
-            <p style='opacity:.7'>Temporary mode: endpoint is alive and ready.</p>
-            </body></html>
-            """
-        )
-
-    @fast_app.post("/api/stripe/checkout")
-    async def checkout_post(payload: dict | None = None):
-        """POST handler for API clients."""
-        import os
-        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
-        return {
-            "ok": True,
-            "configured": bool(payment_link),
-            "url": payment_link or "https://checkout.stripe.com/test",
-            "note": "Set STRIPE_PAYMENT_LINK_URL to your live/test Stripe Payment Link",
-            "payload": payload or {},
-        }
+        return {"status": "ok", "service": "lifetune-station", "mode": "cpu-single-app"}
 
     @fast_app.get("/api/gpu/health")
     async def gpu_health():
@@ -73,182 +38,164 @@ def web_ui():
     @fast_app.post("/api/generate")
     async def generate(payload: dict):
         try:
-            async with httpx.AsyncClient(timeout=180.0) as client:
+            async with httpx.AsyncClient(timeout=240.0) as client:
                 r = await client.post(f"{UPSTREAM_GPU_API}/generate", json=payload)
                 r.raise_for_status()
                 return r.json()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"GPU generation failed: {e}")
-    
+
+    @fast_app.get("/api/stripe/checkout")
+    async def checkout_get(plan: str = "day_pass"):
+        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
+        if payment_link:
+            return RedirectResponse(url=payment_link, status_code=302)
+        return HTMLResponse(
+            f"""<html><body style='font-family:monospace;background:#0a0a1a;color:#ffb347;padding:24px'>
+            <h2 style='color:#00e5ff'>Checkout not configured yet</h2>
+            <p>Plan: <b>{plan}</b></p>
+            <p>Set <code>STRIPE_PAYMENT_LINK_URL</code> to enable one-click purchase.</p>
+            </body></html>"""
+        )
+
+    @fast_app.post("/api/stripe/checkout")
+    async def checkout_post(payload: dict | None = None):
+        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
+        return {
+            "ok": True,
+            "configured": bool(payment_link),
+            "url": payment_link or "https://checkout.stripe.com/test",
+            "payload": payload or {},
+        }
+
     @fast_app.get("/", response_class=HTMLResponse)
     def root():
-        return '''<!DOCTYPE html>
+        return """
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeTune Radio — Incoming Transmission</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0a0a1a;
-            color: #ffb347;
-            font-family: 'Share Tech Mono', monospace;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: "";
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.35), rgba(0,0,0,0.35) 1px, transparent 1px, transparent 2px);
-            pointer-events: none; z-index: 1000;
-        }
-        .container {
-            max-width: 900px; margin: 0 auto; padding: 20px;
-            position: relative; z-index: 10;
-        }
-        .header {
-            text-align: center; padding: 30px 20px;
-            border: 2px solid #ffb347; margin-bottom: 30px;
-            background: rgba(10, 10, 26, 0.9);
-        }
-        h1 {
-            font-size: 32px; color: #00e5ff;
-            text-shadow: 0 0 20px #00e5ff;
-            margin-bottom: 10px; letter-spacing: 4px;
-        }
-        .subtitle { color: #ffb347; font-size: 12px; opacity: 0.7; }
-        .radio-panel {
-            border: 3px solid #00e5ff; padding: 30px;
-            margin-bottom: 30px;
-            background: rgba(0, 229, 255, 0.05);
-        }
-        .display {
-            background: #1a1a2e; border: 2px solid #ffb347;
-            padding: 40px; margin-bottom: 20px;
-            text-align: center;
-            box-shadow: inset 0 0 30px rgba(255, 179, 71, 0.1);
-        }
-        .visualizer {
-            display: flex; justify-content: center; align-items: flex-end;
-            height: 60px; gap: 3px; margin: 20px 0;
-        }
-        .bar {
-            width: 8px; background: #00e5ff;
-            animation: equalize 0.5s ease-in-out infinite alternate;
-        }
-        @keyframes equalize { 0% { height: 10%; } 100% { height: 100%; } }
-        button {
-            background: transparent; border: 2px solid #ffb347;
-            color: #ffb347; padding: 15px 30px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px; cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase; letter-spacing: 2px;
-        }
-        button:hover { background: #ffb347; color: #0a0a1a; box-shadow: 0 0 20px #ffb347; }
-        button.primary { border-color: #00e5ff; color: #00e5ff; }
-        button.primary:hover { background: #00e5ff; box-shadow: 0 0 20px #00e5ff; }
-        .status-bar {
-            display: flex; justify-content: space-between;
-            padding: 15px 20px; background: #1a1a2e;
-            border: 1px solid #00e5ff; margin-top: 20px;
-            font-size: 11px;
-        }
-        .status-item { display: flex; align-items: center; gap: 8px; }
-        .indicator {
-            width: 8px; height: 8px; background: #333;
-            border-radius: 50%;
-        }
-        .indicator.active {
-            background: #00e5ff; box-shadow: 0 0 10px #00e5ff;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px; margin-top: 15px;
-        }
-        .pricing-card {
-            border: 2px solid #333;
-            padding: 20px; text-align: center;
-        }
-        .pricing-card.popular {
-            border-color: #00e5ff;
-            background: rgba(0, 229, 255, 0.05);
-        }
-        .price { font-size: 28px; color: #ffb347; margin: 10px 0; }
-        .footer {
-            text-align: center; padding: 30px;
-            border-top: 1px solid #333;
-            margin-top: 40px; font-size: 10px; color: #666;
-        }
-        .footer a { color: #00e5ff; text-decoration: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeTune Station</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box} body{margin:0;background:#0a0a1a;color:#ffb347;font-family:'Share Tech Mono',monospace}
+    body:before{content:"";position:fixed;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28),rgba(0,0,0,.28) 1px,transparent 1px,transparent 2px);pointer-events:none}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    .card{border:2px solid #00e5ff;background:rgba(0,229,255,.06);padding:18px;margin-bottom:16px}
+    .hdr{border:2px solid #ffb347;text-align:center;padding:18px;background:rgba(10,10,26,.9)}
+    h1{margin:0;color:#00e5ff;text-shadow:0 0 14px #00e5ff;letter-spacing:3px}
+    .sub{opacity:.7;font-size:12px;margin-top:6px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    button{border:2px solid #ffb347;background:transparent;color:#ffb347;padding:10px 14px;cursor:pointer;letter-spacing:1px}
+    button:hover{background:#ffb347;color:#0a0a1a;box-shadow:0 0 16px #ffb347}
+    .pri{border-color:#00e5ff;color:#00e5ff}.pri:hover{background:#00e5ff;box-shadow:0 0 16px #00e5ff}
+    .eq{display:flex;gap:4px;align-items:flex-end;height:56px;margin:10px 0}
+    .bar{width:8px;height:20%;background:#00e5ff;animation:eq .45s ease-in-out infinite alternate}
+    .bar:nth-child(2n){background:#ffb347;animation-delay:.1s}.bar:nth-child(3n){background:#ff2d7b;animation-delay:.2s}
+    @keyframes eq{0%{height:10%}100%{height:100%}}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .p{border:1px solid #333;padding:10px}.p.active{border-color:#00e5ff;background:rgba(0,229,255,.08)}
+    .tiny{font-size:12px;opacity:.7}
+    audio{width:100%;margin-top:10px}
+    .ok{color:#00e5ff}.err{color:#ff2d7b}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>⚡ LIFETUNE RADIO</h1>
-            <p class="subtitle">AI MUSIC // PERSONALIZED TRANSMISSIONS // DAILY DELIVERY</p>
-        </header>
-        <div class="radio-panel">
-            <div class="display">
-                <div style="color:#ffb347;font-size:18px;letter-spacing:2px;">● STANDBY — READY TO TRANSMIT</div>
-                <div class="visualizer">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div>
-                </div>
-            </div>
-            <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">
-                <button class="primary">GENERATE MIX</button>
-                <button>GET CREDITS</button>
-            </div>
-            <div class="status-bar">
-                <div class="status-item"><div class="indicator active"></div><span>SIGNAL: STRONG</span></div>
-                <div><span>CREDITS: 1</span></div>
-                <div><span>API: CONNECTED</span></div>
-            </div>
-        </div>
-        <div style="border:1px solid #ffb347;padding:25px;margin-bottom:20px;">
-            <div style="color:#00e5ff;font-size:12px;margin-bottom:15px;letter-spacing:3px;">[ TIER SELECTION ]</div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div style="font-size:12px;color:#666">FREE</div>
-                    <div class="price">$0</div>
-                    <div style="font-size:11px;color:#ffb347;opacity:0.7">
-                        1 track/day • 1 station
-                    </div>
-                </div>
-                <div class="pricing-card popular">
-                    <div style="font-size:12px;color:#00e5ff">DAY PASS</div>
-                    <div class="price">$5</div>
-                    <a href="/api/stripe/checkout" target="_blank">
-                        <button class="primary" style="width:100%;margin-top:10px;">PURCHASE</button>
-                    </a>
-                </div>
-                <div class="pricing-card">
-                    <div style="font-size:12px;color:#ff2d7b">PRO MONTHLY</div>
-                    <div class="price">$7.99</div>
-                    <div style="font-size:11px;color:#ffb347;opacity:0.7">
-                        12 tracks/day • 3 stations
-                    </div>
-                </div>
-            </div>
-        </div>
-        <footer class="footer">
-            <p><a href="/api/health">[ SYSTEM STATUS ]</a> // <a href="/api/stripe/checkout">[ CHECKOUT ]</a></p>
-            <p>Built with Next.js + Clerk + Stripe + Supabase</p>
-        </footer>
+  <div class="wrap">
+    <div class="hdr">
+      <h1>⚡ LIFETUNE STATION</h1>
+      <div class="sub">retro-modern AI radio • single CPU app • autonomous-ready</div>
     </div>
+
+    <div class="card">
+      <div class="row">
+        <div id="status">● STANDBY</div>
+        <div class="tiny">Credits: <span id="credits">3</span></div>
+      </div>
+      <div class="eq" id="eq">
+        <div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div>
+        <div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div>
+        <div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div><div class='bar'></div>
+      </div>
+      <div class="row">
+        <button class="pri" id="genBtn">GENERATE TRACK</button>
+        <a href="/api/stripe/checkout" target="_blank"><button>GET CREDITS</button></a>
+      </div>
+      <audio id="player" controls></audio>
+    </div>
+
+    <div class="card">
+      <div class="tiny" style="margin-bottom:8px">PRESETS</div>
+      <div class="grid" id="presets"></div>
+    </div>
+
+    <div class="card tiny">
+      <div>Health: <a class="ok" href="/api/health" target="_blank">/api/health</a> · GPU: <a class="ok" href="/api/gpu/health" target="_blank">/api/gpu/health</a></div>
+      <div>API: <span id="apiState">checking...</span></div>
+    </div>
+  </div>
+
+  <script>
+    const presets = [
+      {name:'TRIBAL RESONANCE', prompt:'tribal electronic ambient bass-heavy world-music', bpm:95},
+      {name:'NEURAL DRIFT', prompt:'deep ambient neural atmospheric ethereal', bpm:70},
+      {name:'CYBER PULSE', prompt:'cyberpunk synthwave dark electronic driving', bpm:128},
+      {name:'MEDITATION', prompt:'meditation calm peaceful healing spiritual church', bpm:60},
+      {name:'VOID LOUNGE', prompt:'lo-fi chill jazz atmospheric smooth night', bpm:80},
+      {name:'STELLAR GROOVE', prompt:'house disco funk electronic upbeat groove', bpm:122}
+    ];
+    let selected = presets[0];
+    let credits = Number(localStorage.getItem('lifetune_credits')||'3');
+    const creditsEl = document.getElementById('credits');
+    const statusEl = document.getElementById('status');
+    const player = document.getElementById('player');
+    const presetsEl = document.getElementById('presets');
+    creditsEl.textContent = credits;
+
+    function renderPresets(){
+      presetsEl.innerHTML = '';
+      presets.forEach((p,i)=>{
+        const d=document.createElement('div');
+        d.className='p'+(p===selected?' active':'');
+        d.innerHTML=`<div>${p.name}</div><div class='tiny'>${p.bpm} bpm</div>`;
+        d.onclick=()=>{selected=p;renderPresets();};
+        presetsEl.appendChild(d);
+      });
+    }
+    renderPresets();
+
+    async function b64ToBlobUrl(b64,mime='audio/wav'){ const bin=atob(b64); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i); return URL.createObjectURL(new Blob([arr],{type:mime})); }
+
+    document.getElementById('genBtn').onclick = async ()=>{
+      if(credits<=0){ statusEl.innerHTML='<span class="err">No credits left</span>'; return; }
+      statusEl.innerHTML='<span class="ok">Synthesizing...</span>';
+      try{
+        const r = await fetch('/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:selected.prompt,duration:60,bpm:selected.bpm})});
+        const data = await r.json();
+        if(!r.ok) throw new Error(data.detail||'generate failed');
+        let src = data.audio_url || null;
+        if(!src && data.audio_base64) src = await b64ToBlobUrl(data.audio_base64);
+        if(!src) throw new Error('No audio returned');
+        player.src = src;
+        await player.play();
+        credits -= 1; localStorage.setItem('lifetune_credits', String(credits)); creditsEl.textContent=credits;
+        statusEl.innerHTML = `<span class='ok'>Now playing: ${selected.name}</span>`;
+      }catch(e){ statusEl.innerHTML = `<span class='err'>${e.message}</span>`; }
+    };
+
+    fetch('/api/gpu/health').then(r=>r.json()).then(()=>{
+      document.getElementById('apiState').innerHTML = '<span class="ok">connected</span>'
+    }).catch(()=>{
+      document.getElementById('apiState').innerHTML = '<span class="err">offline</span>'
+    });
+  </script>
 </body>
-</html>'''
-    
+</html>
+        """
+
     return fast_app
+
 
 if __name__ == "__main__":
     print("Deploy: modal deploy modal_app.py")
