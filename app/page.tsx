@@ -1,43 +1,34 @@
+import Link from 'next/link';
+
 export default function HomePage() {
   return (
     <main className="sim-wrap">
       <div className="noise" />
       <section className="panel">
-        <p className="tiny">LIFETUNE STATION // PRE-LAUNCH SIMULATION</p>
+        <p className="tiny">UNAUTHORIZED SIGNAL DETECTED</p>
         <h1>⚡ LifeTune Station</h1>
-        <p className="subtitle">Intergalactic Radio Energy · Retro 90s Soul · Modern AI Future</p>
+        <p className="subtitle">Secret intergalactic radio infrastructure is under active construction.</p>
+
+        <div className="callout danger">
+          STATUS: <strong>RESTRICTED PREVIEW</strong> — public frequency still locked.
+        </div>
 
         <div className="grid">
-          <div className="card">
-            <h3>Mission</h3>
-            <p>Turn life into music. Personalized stations, daily vibes, cinematic frequencies.</p>
-          </div>
-          <div className="card">
-            <h3>Launch Mode</h3>
-            <p>Bare-bones landing online now. Payment + login wiring next. Shipping tonight.</p>
-          </div>
-          <div className="card">
-            <h3>Sound Aesthetic</h3>
-            <p>Church calm, meditation focus, tribal pulse, and cyber-night radio textures.</p>
-          </div>
-          <div className="card">
-            <h3>Status</h3>
-            <p>Simulation online. Brand locked. Ready for Stripe onboarding + growth push.</p>
-          </div>
+          <div className="card"><h3>What this is</h3><p>A covert launch portal for an AI radio product that turns daily life into music.</p></div>
+          <div className="card"><h3>Current phase</h3><p>Foundation and monetization rails are being finalized for immediate rollout.</p></div>
+          <div className="card"><h3>What’s next</h3><p>Authentication, payments, premium channels, autonomous generation, host personas.</p></div>
+          <div className="card"><h3>Signal type</h3><p>Retro-futurist simulation with modern deployment architecture.</p></div>
         </div>
 
         <div className="eq" aria-hidden>
-          {Array.from({ length: 22 }).map((_, i) => (
-            <span key={i} style={{ animationDelay: `${i * 0.06}s` }} />
-          ))}
+          {Array.from({ length: 20 }).map((_, i) => <span key={i} style={{ animationDelay: `${i * 0.05}s` }} />)}
         </div>
 
         <div className="cta-row">
-          <a className="btn primary" href="#">Join Early Access</a>
-          <a className="btn" href="#">See Vision</a>
+          <Link className="btn primary" href="/access">Request Access</Link>
+          <Link className="btn" href="/mission">Read Mission Brief</Link>
+          <Link className="btn" href="/build">View Build Log</Link>
         </div>
-
-        <p className="foot">Built by Mind Expansion Network · LifeTune Station</p>
       </section>
     </main>
   );

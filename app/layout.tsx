@@ -1,15 +1,27 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'LifeTune Station — Intergalactic Simulation',
-  description: 'A retro-futuristic simulation for the LifeTune Station launch.',
+  title: 'LifeTune Station // Restricted Build',
+  description: 'Classified pre-launch portal for LifeTune Station.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <header className="topbar">
+          <div className="brand">LIFETUNE // CLASSIFIED</div>
+          <nav>
+            <Link href="/">Portal</Link>
+            <Link href="/mission">Mission</Link>
+            <Link href="/build">Build Log</Link>
+            <Link href="/access">Access</Link>
+          </nav>
+        </header>
+        {children}
+      </body>
     </html>
   );
 }
