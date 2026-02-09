@@ -25,9 +25,41 @@ def web_ui():
     def health():
         return {"status": "ok", "service": "lifetune-radio"}
     
+    @fast_app.get("/api/stripe/checkout")
+    async def checkout_get(plan: str = "day_pass"):
+        """GET handler so browser links work."""
+        from fastapi.responses import RedirectResponse, HTMLResponse
+        import os
+
+        # If real Stripe Payment Link is configured, redirect immediately.
+        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
+        if payment_link:
+            return RedirectResponse(url=payment_link, status_code=302)
+
+        # Fallback test screen so users don't hit a dead endpoint.
+        return HTMLResponse(
+            f"""
+            <html><body style='font-family:monospace;background:#0a0a1a;color:#ffb347;padding:24px'>
+            <h2 style='color:#00e5ff'>Checkout not configured yet</h2>
+            <p>Plan: <b>{plan}</b></p>
+            <p>Set <code>STRIPE_PAYMENT_LINK_URL</code> in Modal env to enable one-click purchase.</p>
+            <p style='opacity:.7'>Temporary mode: endpoint is alive and ready.</p>
+            </body></html>
+            """
+        )
+
     @fast_app.post("/api/stripe/checkout")
-    def checkout_test():
-        return {"test": True, "url": "https://checkout.stripe.com/test"}
+    async def checkout_post(payload: dict | None = None):
+        """POST handler for API clients."""
+        import os
+        payment_link = os.getenv("STRIPE_PAYMENT_LINK_URL", "").strip()
+        return {
+            "ok": True,
+            "configured": bool(payment_link),
+            "url": payment_link or "https://checkout.stripe.com/test",
+            "note": "Set STRIPE_PAYMENT_LINK_URL to your live/test Stripe Payment Link",
+            "payload": payload or {},
+        }
 
     @fast_app.get("/api/gpu/health")
     async def gpu_health():
