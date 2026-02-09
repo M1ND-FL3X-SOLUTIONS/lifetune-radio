@@ -7,14 +7,17 @@ app = App("lifetune-station")
 
 image = (
     modal.Image.debian_slim()
-    .pip_install("fastapi", "uvicorn")
+    .pip_install("fastapi", "uvicorn", "httpx")
 )
+
+UPSTREAM_GPU_API = "https://m1ndb0t-2045--intergalactic-music-festival-radio-api.modal.run"
 
 @app.function(image=image)
 @modal.asgi_app()
 def web_ui():
-    from fastapi import FastAPI
+    from fastapi import FastAPI, HTTPException
     from fastapi.responses import HTMLResponse
+    import httpx
     
     fast_app = FastAPI()
     
@@ -25,6 +28,25 @@ def web_ui():
     @fast_app.post("/api/stripe/checkout")
     def checkout_test():
         return {"test": True, "url": "https://checkout.stripe.com/test"}
+
+    @fast_app.get("/api/gpu/health")
+    async def gpu_health():
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                r = await client.get(f"{UPSTREAM_GPU_API}/health")
+                return {"status": "ok", "upstream_status": r.status_code, "upstream": UPSTREAM_GPU_API}
+        except Exception as e:
+            return {"status": "degraded", "error": str(e), "upstream": UPSTREAM_GPU_API}
+
+    @fast_app.post("/api/generate")
+    async def generate(payload: dict):
+        try:
+            async with httpx.AsyncClient(timeout=180.0) as client:
+                r = await client.post(f"{UPSTREAM_GPU_API}/generate", json=payload)
+                r.raise_for_status()
+                return r.json()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"GPU generation failed: {e}")
     
     @fast_app.get("/", response_class=HTMLResponse)
     def root():
