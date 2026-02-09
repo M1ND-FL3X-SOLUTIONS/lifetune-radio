@@ -8,9 +8,9 @@ export default function MissionPage() {
 
         <div className="stack">
           <div className="card"><h3>Vision</h3><p>Give people a station that adapts to mood, routine, and intention — focus, calm, prayer, gym, late-night drive, all of it.</p></div>
-          <div className="card"><h3>Format</h3><p>Retro 90s radio identity + modern AI generation and product infrastructure.</p></div>
-          <div className="card"><h3>Launch Objective</h3><p>Ship fast, monetize quickly, iterate aggressively. Build public momentum while the full stack evolves.</p></div>
-          <div className="card"><h3>Long Game</h3><p>From one station to a full network of intelligent channels and autonomous media products.</p></div>
+          <div className="card"><h3>Launch model</h3><p>Ship lightweight now, monetize early, then expand into stations, hosts, and deeper production tooling.</p></div>
+          <div className="card"><h3>Audience</h3><p>Streamers, creators, founders, small venues, and anyone wanting safe royalty-friendly AI background music.</p></div>
+          <div className="card"><h3>Operating principle</h3><p>Cost-aware architecture: CPU app always on, GPU spins up only when users tune in and generate.</p></div>
         </div>
       </section>
     </main>

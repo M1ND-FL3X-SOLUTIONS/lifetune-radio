@@ -38,11 +38,11 @@ export default function HomePage() {
         <p className="tiny">UNAUTHORIZED SIGNAL DETECTED // LIFETUNE.APP</p>
         <h1>⚡ LifeTune Station</h1>
         <p className="subtitle">
-          Secret intergalactic radio infrastructure is under active construction. Access tier is currently controlled.
+          AI radio that never stops. Mobile-first, creator-ready, and built to monetize from day one.
         </p>
 
         <div className="callout danger">
-          STATUS: <strong>RESTRICTED PREVIEW</strong> — public frequency still locked.
+          STATUS: <strong>LIVE MVP ROLLING OUT</strong> — auth, billing, and persistent libraries being finalized.
         </div>
 
         <div className="pixel-banner" aria-hidden>
@@ -53,20 +53,20 @@ export default function HomePage() {
 
         <div className="grid">
           <div className="card">
-            <h3>What this is</h3>
-            <p>A covert launch portal for an AI radio product that turns daily life into music.</p>
+            <h3>What ships now</h3>
+            <p>Continuous generation, frequency presets, lyric mode, mobile playback, download-ready outputs.</p>
           </div>
           <div className="card">
-            <h3>Current phase</h3>
-            <p>Foundation and monetization rails are being finalized for immediate rollout.</p>
+            <h3>Monetization rails</h3>
+            <p>Stripe checkout, optional Ko-fi support, and day-pass/pro tier strategy for fast launch revenue.</p>
           </div>
           <div className="card">
-            <h3>What’s next</h3>
-            <p>Authentication, payments, premium channels, autonomous generation, host personas.</p>
+            <h3>Core stack</h3>
+            <p>Next.js + Clerk + Supabase + Stripe + on-demand GPU generation + Vercel-first deployment.</p>
           </div>
           <div className="card">
-            <h3>Signal type</h3>
-            <p>Retro-futurist simulation with modern deployment architecture.</p>
+            <h3>Launch focus</h3>
+            <p>Fast ship, clean UX, stable queue states, genre adherence improvements, and account-based saved tracks.</p>
           </div>
         </div>
 
@@ -79,7 +79,7 @@ export default function HomePage() {
         <div className="theme-box">
           <div className="theme-head">
             <strong>Lifestyle Theme Preview</strong>
-            <span className="tiny">(customization sample)</span>
+            <span className="tiny">(personalization sample)</span>
           </div>
           <div className="theme-row">
             {(Object.keys(THEMES) as ThemeKey[]).map((k) => (
@@ -93,14 +93,23 @@ export default function HomePage() {
             ))}
           </div>
           <p className="theme-note">
-            Theme selected: <b>{THEMES[theme].label}</b> — this will evolve into full user lifestyle personalization.
+            Theme selected: <b>{THEMES[theme].label}</b> — this maps to future user profiles and station mood memory.
           </p>
+        </div>
+
+        <div className="stack" style={{ marginBottom: 14 }}>
+          <div className="card">
+            <h3>Immediate launch checklist</h3>
+            <p>✅ Clerk login · ✅ Supabase persistence · ✅ Stripe sandbox · ✅ Queue clarity · ✅ Terms/Privacy pages.</p>
+          </div>
         </div>
 
         <div className="cta-row">
           <Link className="btn primary" href="/access">Request Access</Link>
           <Link className="btn" href="/mission">Read Mission Brief</Link>
           <Link className="btn" href="/build">View Build Log</Link>
+          <Link className="btn" href="/pricing">Pricing</Link>
+          <Link className="btn" href="/legal">Legal</Link>
         </div>
       </section>
     </main>

@@ -1,10 +1,11 @@
 export default function BuildPage() {
   const items = [
-    'Landing portal deployed and branded for launch communications.',
-    'Retro simulation theme established (CRT + neon + terminal narrative).',
-    'Checkout and auth rails prepared for integration sequence.',
-    'CPU app + generation path architecture defined for autonomous ops.',
-    'Next phase: gated access, premium tiers, and continuous station output.',
+    'Portal upgraded to launch-ready messaging and clearer monetization path.',
+    'Retro simulation theme retained with stronger product clarity and CTAs.',
+    'Clerk + Supabase + Stripe stack positioned as primary launch backbone.',
+    'On-demand GPU strategy documented to prevent runaway compute burn.',
+    'Current sprint: queue clarity, genre adherence, and account persistence hardening.',
+    'Next sprint: shareable stations, birthday packs, streamer bundles, and MIDI alpha.',
   ];
 
   return (
@@ -12,11 +13,11 @@ export default function BuildPage() {
       <section className="panel">
         <p className="tiny">BUILD LOG // CLASSIFIED</p>
         <h1>Construction Timeline</h1>
-        <p className="subtitle">Current workstream is focused on launch-readiness and premium infrastructure.</p>
+        <p className="subtitle">Current workstream is focused on launch-readiness, billing, and repeatable revenue.</p>
 
         <ol className="timeline">
           {items.map((item, i) => (
-            <li key={i}><span>0{i + 1}</span><p>{item}</p></li>
+            <li key={i}><span>{String(i + 1).padStart(2, '0')}</span><p>{item}</p></li>
           ))}
         </ol>
       </section>
