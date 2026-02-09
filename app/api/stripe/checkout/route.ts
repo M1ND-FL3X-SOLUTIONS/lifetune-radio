@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-});
+// Lazy initialization to avoid build-time errors
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY not configured');
+  }
+  return new Stripe(secretKey, {
+    apiVersion: '2026-01-28.clover' as Stripe.LatestApiVersion,
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const stripe = getStripe();
     const { priceId, userId } = await req.json();
     
     const session = await stripe.checkout.sessions.create({
@@ -46,6 +54,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const stripe = getStripe();
   const { searchParams } = new URL(req.url);
   const priceId = searchParams.get('priceId') || 'day_pass';
   
